@@ -14,12 +14,12 @@ layout: feed
 		<email>jagh1729@gmail.com</email>
 	</author>
 
-	{% for post in site.posts %}
+	{% for install_post in site.installation %}
 		<entry>
 			<title>{{ install_post.title }}</title>
 			<link href="http://diagnosenet.github.io{{ post.url }}"/>
 			<updated>{{ install_post.date | date_to_xmlschema }}</updated>
-			<id>http://diagnosenet.github.io{{ post.id }}</id>
+			<id>http://diagnosenet.github.io{{ install_post.id }}</id>
 			<content type="html">{{ install_post.content | xml_escape }}</content>
 		</entry>
 	{% endfor %}
