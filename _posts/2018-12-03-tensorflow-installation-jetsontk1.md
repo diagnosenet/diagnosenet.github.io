@@ -13,7 +13,7 @@ user@machine$ sudo apt-get install swig
 user@machine$ sudo apt-get install build-essential gfortran libatlas-base-dev python-pip python-dev
 ```
 
-## 1. Java9:
+## 1. Java8:
 the first step is to install Java9, but this is quite simple since Oracle provides a package:
 ```bash
 user@machine$ sudo add-apt-repository ppa:webupd8team/java
