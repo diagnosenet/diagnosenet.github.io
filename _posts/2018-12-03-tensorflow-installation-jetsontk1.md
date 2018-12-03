@@ -8,7 +8,10 @@ date: 2018-12-03
 We assume that latest JetPack was used to flash the Jetson Tk1.
 
 ## 0. Requirements:
-```user@machine$ sudo apt-get install swig```
+```bash
+user@machine$ sudo apt-get install swig
+user@machine$ sudo apt-get install build-essential gfortran libatlas-base-dev python-pip python-dev
+```
 
 ## 1. Java9:
 the first step is to install Java9, but this is quite simple since Oracle provides a package:
@@ -21,7 +24,7 @@ user@machine$ sudo apt-get install oracle-java8-installer
 ## 2. Protobuf:
 Build and Install protobuf:
 
-This need several other packages.:
+This need several other packages:
 ```user@machine$ sudo apt-get install git zip unzip autoconf automake libtool curl zlib1g-dev```
 
 Download the latest protobuf source from github:
