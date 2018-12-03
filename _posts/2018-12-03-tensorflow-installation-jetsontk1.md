@@ -102,4 +102,4 @@ user@machine$ sudo swapon /dev/sda1
 
 
 ### References:
-This tutor:/opt/bazelial is an update of Massimiliano blog for building TensorFlow on Jetson TK1. https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html
+[This tutorial is an update of Massimiliano blog for building TensorFlow on Jetson TK1.] (https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html)
