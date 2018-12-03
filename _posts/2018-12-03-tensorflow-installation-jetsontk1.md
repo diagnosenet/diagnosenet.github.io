@@ -4,7 +4,7 @@ title: "Install TensorFlow on NVIDIA Jetson TK1"
 date: 2018-12-03
 ---
 
-# Building TensorFlow for Jetson TK1:
+## Building TensorFlow for Jetson TK1:
 We assume that latest JetPack was used to flash the Jetson Tk1.
 
 ## 0. Requirements:
