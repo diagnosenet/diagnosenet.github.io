@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Building Cluster on NVIDIA Jetson TK1"
-date: 2019-22-02
+date: 2019-02-22
 ---
 
 ## Building Cluster on NVIDIA Jetson TK1
