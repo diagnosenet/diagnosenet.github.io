@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Install NFS for a Cluster of Jetson TK1"
-date: 2018-12-03
+title: "Building Cluster on NVIDIA Jetson TK1"
+date: 2019-22-02
 ---
 
 ## Building Cluster on NVIDIA Jetson TK1
