@@ -28,11 +28,16 @@
 
 
 			<div id="footer_wrap" class="outer">
-				<footer>
-	    		<ul>
-	        		<li><a href="mailto:jagh1729@gmail.com">email</a></li>
-        		  <li><a href="https://github.com/IADBproject/diagnosenet">github.com/diagnosenet</a></li>
-					</ul>
+				<footer class="inner">
+					{% if site.github.is_project_page %}
+	    		<!--<ul>
+	        		<li> -->
+								<a href="mailto:jagh1729@gmail.com">email</a>
+							<!-- </li>
+        		  <li> -->
+								<a href="https://github.com/IADBproject/diagnosenet">github.com/diagnosenet</a>
+						<!--	</li>
+					</ul> -->
 				</footer>
 			</div>
 
