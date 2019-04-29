@@ -16,10 +16,14 @@
 		<body>
 
 			<!-- HEADER -->
-	    <div id="header_wrap" class="outer">
-	        <header class="inner">
-			<!-- <nav>
-	    		<ul> -->
+	    <div class="wrapper">
+	        <header>
+						<h1><a href="{{ "/" | absolute_url }}">{{ site.title | default: site.github.repository_name }}</a></h1>
+
+						{% if site.logo %}
+          		<img src="{{site.logo | relative_url}}" alt="Logo" />
+						{% endif %}
+
 	        		<a href="/">Home</a>
 	        		<a href="/getstarted">Getting Started</a>
               <a href="/doc">API Documentation</a>
@@ -27,15 +31,14 @@
 			</div>
 
 
-			<!-- <div class="container"> -->
 
 			<!-- MAIN CONTENT -->
 			<div id="main_content_wrap" class="outer">
 				<section class="container">>
-			{{ content }}
+					{{ content }}
 				</section>
 			</div>
-			<!-- /.container -->
+
 
 
 			<!-- FOOTER  -->
