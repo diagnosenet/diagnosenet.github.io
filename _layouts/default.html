@@ -1,23 +1,18 @@
 <!DOCTYPE html>
 <html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<head>
-			<meta charset='utf-8'>
-	    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-		{% seo %}
-			<!-- <link rel="stylesheet" type="text/css" media="screen" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}"> -->
-			<link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
-
-			<!-- <title>{{ page.title }}</title> -->
-			<!-- link to main stylesheet
-			<link rel="stylesheet" type="text/css" href="/css/main.css"> -->
-		</head>
+{% seo %}
+    <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+</head>
 
 		<body>
-
 			<!-- HEADER -->
 	    <div class="wrapper">
 	        <header>
@@ -31,27 +26,17 @@
 	        		<p><a href="/getstarted">Getting Started</a></p>
               <p><a href="/doc">API Documentation</a></p>
 					</header>
-			</div>
 
+					<!-- MAIN CONTENT -->
+					<section class="container">
+						{{ content }}
+					</section>
 
-
-			<!-- MAIN CONTENT -->
-			<section class="container">
-					{{ content }}
-			</section>
-
-
-
-			<!-- FOOTER  -->
-			<footer class="inner">
-					<!-- {% if site.github.is_project_page %} -->
-							<!-- <p class="copyright"> -->
-								<p><a href="mailto:jagh1729@gmail.com">jagh1729@gmail.com</a>
-								<a href="https://github.com/IADBproject/diagnosenet">github.com/diagnosenet</a></p>
-							<!-- </p> -->
-					<!-- {% endif %} -->
-			</footer>
-
-
-		</body>
-	</html>
+					<!-- FOOTER  -->
+					<footer>
+						<p><a href="mailto:jagh1729@gmail.com">jagh1729@gmail.com</a>
+							<a href="https://github.com/IADBproject/diagnosenet">github.com/diagnosenet</a></p>
+					</footer>
+		</div>
+	</body>
+</html>
