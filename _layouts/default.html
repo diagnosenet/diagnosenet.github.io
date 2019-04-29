@@ -7,38 +7,32 @@
 
 {% seo %}
     <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
-    <!--[if lt IE 9]>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
-    <![endif]-->
-</head>
+    
+  </head>
+	<body>
+    	<div class="wrapper">
+		<!-- HEADER -->
+        	<header>
+			<h2 id="project_tagline">{{ site.description | default: site.github.project_tagline }}</h2>
+			{% if site.logo %}
+			<img src="{{site.logo | relative_url}}" alt="Logo" />
+			{% endif %}
 
-		<body>
-			<!-- HEADER -->
-	    <div class="wrapper">
-	        <header>
-						<h2 id="project_tagline">{{ site.description | default: site.github.project_tagline }}</h2>
+	        	<p><a href="/">Home</a></p>
+	        	<p><a href="/getstarted">Getting Started</a></p>
+              		<p><a href="/doc">API Documentation</a></p>
+		</header>
 
-						{% if site.logo %}
-          		<img src="{{site.logo | relative_url}}" alt="Logo" />
-						{% endif %}
+		<!-- MAIN CONTENT -->
+		<section class="container">
+			{{ content }}
+		</section>
 
-	        		<p><a href="/">Home</a></p>
-	        		<p><a href="/getstarted">Getting Started</a></p>
-              <p><a href="/doc">API Documentation</a></p>
-					</header>
-
-					<!-- MAIN CONTENT -->
-					<section class="container">
-						{{ content }}
-					</section>
-
-					<!-- FOOTER  -->
-					<footer>
-						{% if site.github.is_project_page %}
-		        <p class="copyright">{{ site.title | default: site.github.repository_name }} maintained by
+		<!-- FOOTER  -->
+		<footer>
+			<p class="copyright">{{ site.title | default: site.github.repository_name }} maintained by
 		          <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
-		        {% endif %}
-					</footer>
-		</div>
+		</footer>
+	</div>
 	</body>
 </html>
