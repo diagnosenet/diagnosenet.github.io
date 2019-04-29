@@ -18,7 +18,7 @@
 			<!-- HEADER -->
 	    <div class="wrapper">
 	        <header>
-						<h1><a href="{{ "/" | absolute_url }}">{{ DiagnoseNET Wiki }}</a></h1>
+						<h2 id="project_tagline">{{ site.description | default: site.github.project_tagline }}</h2>
 
 						{% if site.logo %}
           		<img src="{{site.logo | relative_url}}" alt="Logo" />
@@ -34,7 +34,7 @@
 
 			<!-- MAIN CONTENT -->
 			<div id="main_content_wrap" class="outer">
-				<section class="container">>
+				<section class="container">
 					{{ content }}
 				</section>
 			</div>
