@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>Building Cluster on NVIDIA Jetson TK1 | DiagnoseNET Application-Framework</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Building Cluster on NVIDIA Jetson TK1" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Building Cluster on NVIDIA Jetson TK1" />
+<meta property="og:description" content="Building Cluster on NVIDIA Jetson TK1" />
+<link rel="canonical" href="http://localhost:4000/getstarted/2019/02/22/building-cluster-on-jetson-tk1" />
+<meta property="og:url" content="http://localhost:4000/getstarted/2019/02/22/building-cluster-on-jetson-tk1" />
+<meta property="og:site_name" content="DiagnoseNET Application-Framework" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2019-02-22T00:00:00+01:00" />
+<script type="application/ld+json">
+{"headline":"Building Cluster on NVIDIA Jetson TK1","dateModified":"2019-02-22T00:00:00+01:00","description":"Building Cluster on NVIDIA Jetson TK1","datePublished":"2019-02-22T00:00:00+01:00","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/getstarted/2019/02/22/building-cluster-on-jetson-tk1"},"url":"http://localhost:4000/getstarted/2019/02/22/building-cluster-on-jetson-tk1","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=abe2182cc2a9ab6e5f6061f37b8cba08fe25f176">
+    
+  </head>
+	<body>
+    	<div class="wrapper">
+		<!-- HEADER -->
+        	<header>
+			<img src="assets/img/logo.png" alt="Logo"/>
+			<h2 id="project_tagline">DiagnoseNET Wiki</h2>
+
+	        	<p><a href="/">Home</a></p>
+	        	<p><a href="/getstarted">Getting Started</a></p>
+              		<p><a href="/doc">API Documentation</a></p>
+		</header>
+
+		<!-- MAIN CONTENT -->
+		<section class="container">
+			<h1>Building Cluster on NVIDIA Jetson TK1</h1>
+<p class="meta">22 Feb 2019</p>
+
+<div class="post">
+  <h2 id="building-cluster-on-nvidia-jetson-tk1">Building Cluster on NVIDIA Jetson TK1</h2>
+
+<h2 id="0-requirements">0. Requirements:</h2>
+
+<p>First, we need to add the Ubuntu’s Universe and Multiverse repositories as they contain packages that many instructions assume. Universe contains community maintained software and Multiverse contains non-free software (licensing restrictions etc.)</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-add-repository universe
+<span class="nb">sudo </span>apt-add-repository multiverse
+</code></pre></div></div>
+<p>Then, we need to upgrade the OS in the boards from Ubuntu 14.04.1 to 14.04.5 by running the following commands:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get update
+<span class="nb">sudo </span>apt-get upgrade
+</code></pre></div></div>
+
+<p>Next, we need to install two packages: nano and OpenSSH. Nano is a terminal text editor needed to modify files directly on terminal. OpenSSH is a freely available version of the Secure Shell (SSH) protocol family of tools for remotely controlling or transferring files between computers. So on all the nodes, we run these two commands:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get install nano
+<span class="nb">sudo </span>apt-get install openssh-server
+</code></pre></div></div>
+<p>On the master node, we install this package:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get install nfs-kernel-server
+</code></pre></div></div>
+<p>An on the workers node, we install this</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get install nfs-common
+</code></pre></div></div>
+<p>MPICH2 is a freely available, portable implementation of MPI, a standard for message-passing for distributed-memory applications used in parallel computing. MPICH is supposed to be high-quality reference implementation of the latest MPI standard and the basis for derivative implementations to meet special purpose needs</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get install mpich2
+</code></pre></div></div>
+<p>Hydra is the default process manager. For the version Ubuntu 14.04.5, the default version is 1.3.x, so the configuration will follow the Hydra process manager.</p>
+
+<h2 id="1-setting-up-static-ip-addresses">1. Setting up static IP Addresses:</h2>
+<p>In order for us to establish a network between the cluster through Ethernet cables we will need to assign static IP Addresses to each of the nodes. To do this, we need to edit the interfaces file on each node. This can be done by doing the following:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>nano /etc/network/interfaces
+</code></pre></div></div>
+<p>Then modify the file as follow:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># The loopback network interface</span>
+auto lo
+iface lo inet loopback
+
+<span class="c"># The primary network interface</span>
+auto eth0
+iface lo inet loopback
+address 192.168.137.10
+netmask 255.255.255.0
+gateway 192.168.137.1
+dns-nameservers 192.168.137.1 8.8.8.8
+</code></pre></div></div>
+<p>To be able to distinguish between nodes without remembering there IP Addresses, we want to assign name on each node by changing the hostname file</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>nano /etc/hostname
+</code></pre></div></div>
+<p>Here, I set the name for the master node is tegra1-c78, with c78 is the last three characters in its MAC address so that I can recognize them when working with the hardware.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tegra1-c78
+</code></pre></div></div>
+<p>Similarly, I have the name for the three other nodes are:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tegra2-c3e
+</code></pre></div></div>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tegra3-c8f
+</code></pre></div></div>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tegra4-cdf
+</code></pre></div></div>
+<p>We need to do the same to change the name for other nodes. Then, in the hosts file of each node, we will add the static IP addresses of all the nodes so that to can connect to each other from any node.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>nano /etc/hosts
+</code></pre></div></div>
+<p>We need to change the content as below for all the boards. However, for the second line, we have to change the name in order to make sure it is the same hostname as the board we am modifying.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>127.0.0.1 localhost
+127.0.0.1 tegra1-c78
+192.168.137.10 tegra1-c78
+192.168.137.11 tegra2-c3e
+192.168.137.12 tegra3-c8f
+192.168.137.13 tegra4-cdf
+</code></pre></div></div>
+
+<p>To apply the changes, we have to reboot all the nodes using the command:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>reboot
+</code></pre></div></div>
+<p>After the boards turning on, on each node, we have to use the new static IP Address in order to remote them. We can notice that the hostnames have also changed. To check if our settings are applied by checking the resolv.conf to see if the nameservers are added.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cat</span> /etc/revolv.conf
+</code></pre></div></div>
+<p>We will see something like this</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nameserver 192.168.137.1
+nameserver 8.8.8.8
+</code></pre></div></div>
+<p>If the output is the same for all the nodes as above, we have changed the static IP addresses successfully.</p>
+
+<h2 id="2-setting-up-ssh-remote-login">2. Setting up SSH remote login</h2>
+
+<p>Since we want the cluster nodes to communicate with each other without having to ask for permission each time we will set up SSH (Secure Shell) remote login.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh-keygen <span class="nt">-t</span> rsa <span class="nt">-b</span> 2048
+</code></pre></div></div>
+<p>Now, we will copy the SSH ID to all the nodes including the head node.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh-copy-id tegra1-c78
+ssh-copy-id tegra2-c3e
+ssh-copy-id tegra3-c8f
+ssh-copy-id tegra4-cdf
+</code></pre></div></div>
+<p>Then, we will need to build the known_hosts file in the .ssh directory. The known_hosts holds id of all the nodes in the cluster and allows password-less access to and from all the nodes in the cluster. To do this we need to create file with the name of all nodes in the .ssh folder and then use ssh keyscan to generate the known_hosts file.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> .ssh
+<span class="nb">sudo </span>nano name_of_hosts
+</code></pre></div></div>
+<p>We will save this file and then change its permissions in order for ssh-keyscan to be able to read the file. Ssh-keyscan is a utility for gathering the public ssh host keys of a number of hosts. It was designed to aid building and verifying ssh_known_hosts file.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd
+sudo </span>chmod 666 ~/.ssh/name_of_hosts
+</code></pre></div></div>
+<p>In this command, chmod 666 means that we will set the permission so that everyone can read and write this file.
+The following command will then generate the known_hosts file:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh-keyscan <span class="nt">-t</span> rsa <span class="nt">-f</span> ~/.ssh/name_of_hosts <span class="o">&gt;</span>~/.ssh/known_hosts
+</code></pre></div></div>
+<p>In this case, -t specifies the type of the key to fetch from the scanned hosts, as we are using RSA key-pair so we put rsa after –t. Next, -f means the ssh-keyscan will read the hosts from a file, one per line .
+Our last step for this setup will be to copy known_hosts, id_rsa public and private keys from the .ssh folder in the head node to the .ssh folder of all the other nodes. Public host keys are stored on and distributed to SSH clients, private keys are stored on SSH servers. We can do this using secure copy. Secure copy (scp) allows files to be copied to, from or between different hosts. It uses SSH for data transfer and provides the same authentication and same level of security as SSH. We use the following steps on the head node to do this:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> .ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra1-c78:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra2-c3e:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra3-c8f:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra4-cdf:.ssh 
+</code></pre></div></div>
+<p>Now, we can remote other nodes using SSH protocol from any node in the cluster without password.</p>
+
+<h2 id="3-mount-network-file-system">3. Mount Network File System</h2>
+
+<p>The Network File System (NFS) mounting is crucial part of the cluster set up in order for all the nodes to have one common working directory. We are going to use the nfs-kernel-server and nfs-common which we had installed earlier. To do that, we will need to create the mount point for the HDD on the master node. Make sure that the mount point is not in the home directory of the ubuntu user. We chose to put it in / as follows:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mkdir /media/cluster_files
+</code></pre></div></div>
+<p>Then we can check the drive by using the command</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>fdisk –l
+</code></pre></div></div>
+<p>Information about the new connected device will display with name /dev/sda. We will need this to make the location.
+/dev/ is the part of the unix directory tree that contains all device files, sda signifies the order of the device in which it was first found, so if there is a second device that is added into the system, it will be named as sdb. we have to set the new added device as type ext4 and mount it to the directory where we wish to share with other nodes.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mkfs.ext4 /dev/sda <span class="nt">-L</span> cluster_files
+</code></pre></div></div>
+<p>Next, we will edit the exports file on the master node. This file will contain the information as to where we will be exporting the cluster_files directory on the slaves.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>nano /etc/exports
+</code></pre></div></div>
+<p>Add the following line at the end:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/media/cluster_files <span class="k">*</span><span class="o">(</span>rw,sync,no_subtree_check<span class="o">)</span>
+</code></pre></div></div>
+<p>The /etc/exports file controls which file systems are exported to remote hosts and specifies options. It contains a table of local physical file systems on an NFS server that are accessible to NFS clients. The contents of the file are maintained by the server’s system administrator. In my setting, rw stands for the file system that is writable, sync means reply clients after data have been stored to stable storage and no_subtree_check will disable subtree checking, which has mild security implications 
+We will need to permanently mount the external drive on the head node so that it automatically mounts itself in /media/cluster_files when the system is rebooted. To do this we will edit the fstab file on the master node by adding the following line at the end:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>nano /etc/fstab
+</code></pre></div></div>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/dev/sda1 /media/cluster_files ext4 defaults 0 0
+</code></pre></div></div>
+<p>The fstab file is used to define how disk partitions should be mounted into the file system, it contains the necessary information to automate the process of mounting partitions. Now, we can mount the external drive on the master node permanently.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mount /dev/sda /media/cluster_files
+</code></pre></div></div>
+<p>The slave nodes will now need to mount this external drive and we will need to make the cluster_files directory and edit the fstab file on each of the slave nodes:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mkdir /media/cluster_files
+<span class="nb">sudo </span>nano /etc/fstab
+</code></pre></div></div>
+<p>Add in the end the following:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tegra1-c78:/media/cluster_files /media/cluster_files nfs <span class="nv">rsize</span><span class="o">=</span>8192,wsize<span class="o">=</span>8192,timeo<span class="o">=</span>14,intr
+</code></pre></div></div>
+<p>With rsize is the number of bytes NFS uses when reading files from an NFS server, wsize is the number of bytes NFE uses when writing files from an NFS server, timeo is the value in tenths of a second before sending the first retransmission and intr means the operations is not allowed to interrupt. Now our NFS mounting should be complete. In order to check this, we will first restart our cluster. Once the cluster is restarted, we will simply copy some files to this directory on master node and check on other that whether they have those files on this directory.</p>
+
+<h2 id="4-message-passing-interface-configuration">4. Message Passing Interface configuration</h2>
+
+<p>In order to setup Hydra, we need to create one file on the master node. This file contains all the host names of the compute nodes. We can create this file anywhere we want, but for simplicity we create it in the NFS shared folder.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> /media/cluster_files
+touch hosts
+</code></pre></div></div>
+<p>To be able to send out jobs to the other nodes in the network, add the host names of all compute nodes to the hosts file</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>192.168.137.10:4
+192.168.137.11:4
+192.168.137.12:4
+192.168.137.13:4
+</code></pre></div></div>
+<p>We need to choose to include master in this file, which would mean that the master node would also act as a compute node. The hosts file only needs to be present on the node that will be used to start jobs on the cluster, usually the master node. But because the home directory is shared among all nodes, all nodes will have the hosts file.</p>
+
+<h2 id="5-running-mpich2-example-applications-on-the-cluster">5. Running MPICH2 example applications on the cluster</h2>
+<p>The MPICH2 package comes with a few example applications that users can run on their cluster. To obtain these examples, download the MPICH2 source package from the MPICH website and extract the archive to a directory. We will check by running an example code which is CPI. CPI is a c program that using MPICH2 library to display the number of processors that will be used to run it. We need to execute the following command to use all 16 processors of four Jetson Tegra K1 boards by using this command:4</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>apt-get build-dep mpich2
+wget http://www.mpich.org/static/downloads/1.4.1/mpich2-1.4.1.tar.gz
+<span class="nb">tar</span> <span class="nt">-xvzf</span> mpich2-1.4.1.tar.gz
+<span class="nb">cd </span>mpich2-1.4.1/
+./configure
+make
+<span class="nb">cd </span>examples/
+</code></pre></div></div>
+<p>You can try with any source code you want, as in this case, I will try with CPI:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mpiexec –f hosts –n 16 bin/cpi
+</code></pre></div></div>
+<p>Up to now, we have already finished building a cluster with four Jetson Tegra K1 boards and be able to run some examples using MPI.</p>
+
+<h2 id="references">References:</h2>
+<p>Allan, A. (2015, August 26). Build a Compact 4 Node Raspberry Pi Cluster. Retrieved from https://makezine.com/projects/build-a-compact-4-node-raspberry-pi-cluster/</p>
+
+<p>Arrow. (2017, September 17). Drive name? What is the correct term for the “sda” part of “/dev/sda”? Retrieved from Stack Exchange: https://unix.stackexchange.com/questions/392701/drive-name-what-is-the-correct-term-for-the-sda-part-of-dev-sda</p>
+
+<p>Barney, B. (2018, July 6). Message Passing Interface (MPI). Retrieved from https://computing.llnl.gov/tutorials/mpi/</p>
+
+<p>Building a Nvidia Jetson TK1 Cluster. (2017, August 17). Retrieved from http://selkie-macalester.org/csinparallel/modules/RosieCluster/build/html/#physical-cluster-set-up</p>
+
+<p>ckimes. (2017, August 21). Introduction to fstab. Retrieved from Ubuntu: https://help.ubuntu.com/community/Fstab</p>
+
+<p>Dalcin, L. (2017). MPI for Python. Retrieved from mpi4py: https://mpi4py.readthedocs.io/en/stable/</p>
+
+<p>Embedded system. (2018, September 25). Retrieved from Wikipedia: https://en.wikipedia.org/wiki/Embedded_system</p>
+
+<p>Example syntax for Secure Copy. (n.d.). Retrieved from Hypexr: http://www.hypexr.org/linux_scp_help.php</p>
+
+<p>HILDENBRAND, J. (2014, August 3). A look at NVIDIA’s Jetson TK1. Retrieved from androidcentral: https://www.androidcentral.com/look-nvidias-jetson-tk1</p>
+
+<p>HOST KEY. (2017, August 3). Retrieved from SSH: https://www.ssh.com/ssh/host-key
+japinator. (2015, December 29).</p>
+
+<p>Configure a static IP on Ubuntu Server 14.04. Retrieved from VSYSAD: http://www.vsysad.com/2015/12/configure-a-static-ip-on-ubuntu-server-14-04/</p>
+
+<p>JetPack. (n.d.). Retrieved from NVIDIA Embedded Computing: https://developer.nvidia.com/embedded/jetpack</p>
+
+<p>Jetson TK1. (2018, July 5). Retrieved from eLinux: https://elinux.org/Jetson_TK1</p>
+
+<p>Kendall, W. (2018). MPI Broadcast and Collective Communication. Retrieved from MPI Tutorial: http://mpitutorial.com/tutorials/mpi-broadcast-and-collective-communication/</p>
+
+<p>Kendall, W. (2018). MPI Scatter, Gather, and Allgather. Retrieved from MPI Tutorial: http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/</p>
+
+<p>Kuan-Yu Yeh, H.-J. C.-D.-Y. (2016). Constructing a GPU Cluster Platform based on Multiple NVIDIA Jetson TKI. 2016 IEEE International Conference on Bioinformatics and Biomedicine (BIBM).</p>
+
+<p>kulve. (2014, October 29). My Jetson focused Linux tips and tricks. Retrieved from NVIDIA Developer: https://devtalk.nvidia.com/default/topic/785551/embedded-systems/my-jetson-focused-linux-tips-and-tricks/</p>
+
+<p>Li, A. &amp;. (2014, November). An Overview of NVIDIA Tegra K1 Architecture. Retrieved from ResearchGate: https://www.researchgate.net/figure/NVIDIA-Tegra-K1-mobile-processor-32-bit-version_fig1_326920932</p>
+
+<p>MASSIMILIANO. (2015, November 27). Building TensorFlow for Jetson TK1. Retrieved from CUDA MUSING: https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html</p>
+
+<p>Mazieres, D., &amp; Davison, W. (2018, March 5). ssh-keyscan. Retrieved from OpenBSD: https://man.openbsd.org/ssh-keyscan</p>
+
+<p>MPICH . (n.d.). Retrieved from MPICH : https://www.mpich.org/</p>
+
+<p>NVIDIA. (2018). Develop, Optimize and Deploy GPU-accelerated Apps. Retrieved from NVIDIA Developer: https://developer.nvidia.com/cuda-toolkit</p>
+
+<p>NVIDIA. (2018). NVIDIA cuDNN. Retrieved from NVIDIA Developer: https://developer.nvidia.com/cudnn</p>
+
+<p>Open MPI: Open Source High Performance Computing. (n.d.). Retrieved from Open MPI: https://www.open-mpi.org/</p>
+
+<p>Pant, S. R. (2018, September 1). What is RSA? Retrieved from Quora: https://www.quora.com/What-is-RSA</p>
+
+<p>Pereira, S. (2013, September 11). Building a simple Beowulf cluster with Ubuntu. Retrieved from https://www-users.cs.york.ac.uk/~mjf/pi_cluster/src/Building_a_simple_Beowulf_cluster.html</p>
+
+<p>pl_rock. (2017, February 17). Failed to fetch http://ppa.launchpad.net [duplicate]. Retrieved from askubuntu: https://askubuntu.com/questions/879064/failed-to-fetch-http-ppa-launchpad-net</p>
+
+<p>Slurm Workload Manager. (2013, March 6). Retrieved from SchedMD: https://slurm.schedmd.com/overview.html</p>
+
+<p>Smith, C. (2006, May 2). Linux NFS-HOWTO. Retrieved from http://nfs.sourceforge.net/nfs-howto/ar01s02.html#whatis_nfs</p>
+
+<p>THE /ETC/EXPORTS CONFIGURATION FILE. (n.d.). Retrieved from redhat: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/deployment_guide/s1-nfs-server-config-exports</p>
+
+
+</div>
+
+		</section>
+
+		<!-- FOOTER  -->
+		<footer>
+			<p class="copyright">DiagnoseNET Wiki maintained by
+		          <a href="mailto:jagh1729@gmail.com">jagh1729@gmail.com</a></p>
+		</footer>
+	</div>
+	</body>
+</html>

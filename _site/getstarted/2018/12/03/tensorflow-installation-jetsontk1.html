@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>Install TensorFlow on NVIDIA Jetson TK1 | DiagnoseNET Application-Framework</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Install TensorFlow on NVIDIA Jetson TK1" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Building TensorFlow for Jetson TK1: We assume that latest JetPack was used to flash the Jetson Tk1." />
+<meta property="og:description" content="Building TensorFlow for Jetson TK1: We assume that latest JetPack was used to flash the Jetson Tk1." />
+<link rel="canonical" href="http://localhost:4000/getstarted/2018/12/03/tensorflow-installation-jetsontk1" />
+<meta property="og:url" content="http://localhost:4000/getstarted/2018/12/03/tensorflow-installation-jetsontk1" />
+<meta property="og:site_name" content="DiagnoseNET Application-Framework" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2018-12-03T00:00:00+01:00" />
+<script type="application/ld+json">
+{"headline":"Install TensorFlow on NVIDIA Jetson TK1","dateModified":"2018-12-03T00:00:00+01:00","description":"Building TensorFlow for Jetson TK1: We assume that latest JetPack was used to flash the Jetson Tk1.","datePublished":"2018-12-03T00:00:00+01:00","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/getstarted/2018/12/03/tensorflow-installation-jetsontk1"},"url":"http://localhost:4000/getstarted/2018/12/03/tensorflow-installation-jetsontk1","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=abe2182cc2a9ab6e5f6061f37b8cba08fe25f176">
+    
+  </head>
+	<body>
+    	<div class="wrapper">
+		<!-- HEADER -->
+        	<header>
+			<img src="assets/img/logo.png" alt="Logo"/>
+			<h2 id="project_tagline">DiagnoseNET Wiki</h2>
+
+	        	<p><a href="/">Home</a></p>
+	        	<p><a href="/getstarted">Getting Started</a></p>
+              		<p><a href="/doc">API Documentation</a></p>
+		</header>
+
+		<!-- MAIN CONTENT -->
+		<section class="container">
+			<h1>Install TensorFlow on NVIDIA Jetson TK1</h1>
+<p class="meta">03 Dec 2018</p>
+
+<div class="post">
+  <h2 id="building-tensorflow-for-jetson-tk1">Building TensorFlow for Jetson TK1:</h2>
+<p>We assume that latest JetPack was used to flash the Jetson Tk1.</p>
+
+<h2 id="0-requirements">0. Requirements:</h2>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install swig
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install build-essential gfortran libatlas-base-dev python-pip python-dev
+</code></pre></div></div>
+
+<h2 id="1-java8">1. Java8:</h2>
+<p>the first step is to install Java8, but this is quite simple since Oracle provides a package:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>add-apt-repository ppa:webupd8team/java
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get update
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install oracle-java8-installer
+</code></pre></div></div>
+
+<h2 id="2-protobuf">2. Protobuf:</h2>
+<p>Build and Install protobuf:</p>
+
+<p>This need several other packages:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install git zip unzip autoconf automake libtool curl zlib1g-dev
+</code></pre></div></div>
+
+<p>Download the latest protobuf source from github:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>chown <span class="nt">-R</span> ubuntu:ubuntu /opt
+user@machine<span class="nv">$ </span><span class="nb">cd</span> /opt
+user@machine:/opt/<span class="nv">$ </span>git clone https://github.com/google/protobuf.git
+</code></pre></div></div>
+
+<p>First generate the configuration file and then run make:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">cd</span> /opt/protobuf
+user@machine:/opt/protobuf<span class="nv">$ </span>./autogen.sh
+user@machine:/opt/protobuf<span class="nv">$ </span>./configure <span class="nt">--prefix</span><span class="o">=</span>/usr
+user@machine:/opt/protobuf<span class="nv">$ </span>make <span class="nt">-j</span> 4
+user@machine:/opt/protobuf<span class="nv">$ </span><span class="nb">sudo </span>make install
+user@machine:/opt/protobuf<span class="nv">$ </span>protoc <span class="nt">--version</span>
+libprotoc 3.4.0
+</code></pre></div></div>
+
+<h2 id="21-maven">2.1. Maven:</h2>
+<p>Install Maven java interface for building protobuf
+<code class="highlighter-rouge">user@machine$ sudo apt-get install maven</code></p>
+
+<h3 id="generate-the-protobuf-java-341jar-to-jetson-architecture">Generate the protobuf-java-3.4.1.jar to Jetson Architecture:</h3>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/opt/protobuf<span class="nv">$ </span>mvn <span class="nt">-f</span> java/pom.xml package
+<span class="o">[</span>INFO] <span class="nt">---</span> maven-bundle-plugin:3.0.1:bundle <span class="o">(</span>default-bundle<span class="o">)</span> @ protobuf-java-util <span class="nt">---</span>
+<span class="o">[</span>INFO] ...
+
+user@machine:/opt/protobuf<span class="nv">$ </span><span class="nb">ls </span>java/core/target/
+protobuf-java-3.4.1.jar
+</code></pre></div></div>
+
+<h2 id="3-bazel">3. Bazel:</h2>
+<p>Install bazel to compile TensorFlow 0.8.0:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">cd</span> /opt
+user@machine:/opt<span class="nv">$ </span> git clone https://github.com/bazelbuild/bazel.git
+user@machine:/opt<span class="nv">$ </span><span class="nb">cd </span>bazel
+user@machine:/opt<span class="nv">$ </span>git checkout tags/0.1.4
+</code></pre></div></div>
+
+<p>Copy the files generated to Jetson architecture:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/opt/bazel<span class="nv">$ </span>cp /usr/bin/protoc  third_party/protobuf/protoc-linux-arm32.exe
+user@machine:/opt/bazel<span class="nv">$ </span>cp ../protobuf/java/core/target/protobuf-java-3.4.1.jar third_party/protobuf/protobuf-java-3.0.0-beta-1.jar
+user@machine:/opt/bazel<span class="nv">$ </span>rm third_party/protobufprotobuf-java-3.0.0-beta-1.jar
+</code></pre></div></div>
+
+<p>Compile Bazel:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/opt/bazel<span class="nv">$ </span>./compile.sh
+Build successful! Binary is here: /opt/bazel/output/bazel
+
+user@machine:/opt/bazel<span class="nv">$ </span><span class="nb">sudo </span>cp output/bazel /usr/local/bin/
+user@machine:/opt/bazel<span class="nv">$ </span><span class="nb">ls</span> /usr/local/bin/bazel
+/usr/local/bin/bazel
+</code></pre></div></div>
+
+<h2 id="4-add-swap-memory">4. Add Swap Memory:</h2>
+<p>Plug usb memory and use it as swap</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>fdisk <span class="nt">-l</span>
+    <span class="o">(</span>check the device name of usb memory. This <span class="nb">time</span>, the name is /dev/sda1<span class="o">)</span>  
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>umount /dev/sda1     
+    <span class="o">(</span>This is not typo. <span class="s2">"umount"</span> is correct.<span class="o">)</span>  
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>mkswap /dev/sda1
+    <span class="o">(</span>There are some outputs.<span class="o">)</span>
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>swapon /dev/sda1
+    <span class="o">(</span>There are some outputs.<span class="o">)</span>
+</code></pre></div></div>
+
+<h2 id="5-install-cuda-65-cudnn-v2-and-cuda-70">5. Install CUDA 6.5, cuDNN v2 and CUDA-7.0:</h2>
+<h3 id="51-install-cuda-65">5.1 Install CUDA 6.5:</h3>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span>wget http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda-repo-l4t-r21.2-6-5-prod_6.5-34_armhf.deb
+</code></pre></div></div>
+
+<p>Jetson TK1 Version</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>dpkg <span class="nt">-i</span> cuda-repo-l4t-r21.2-6-5-prod_6.5-34_armhf.deb   
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get update 
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install cuda-toolkit-6-5
+</code></pre></div></div>
+
+<p>Check that nvcc is working:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/usr/local/cuda-6.5<span class="nv">$ </span><span class="nb">sudo </span>chown <span class="nt">-R</span> ubuntu:ubuntu samples/
+user@machine:/usr/local/cuda-6.5<span class="nv">$ </span><span class="nb">cd </span>samples/0_Simple/matrixMul
+user@machine:/usr/local/cuda-6.5/samples/0_Simple/matrixMul<span class="nv">$ </span>make
+user@machine:/usr/local/cuda-6.5/samples/0_Simple/matrixMul<span class="nv">$ </span>./matrixMul
+<span class="o">[</span>Matrix Multiply Using CUDA] - Starting...
+GPU Device 0: <span class="s2">"GK20A"</span> with compute capability 3.2
+
+MatrixA<span class="o">(</span>320,320<span class="o">)</span>, MatrixB<span class="o">(</span>640,320<span class="o">)</span>
+Computing result using CUDA Kernel...
+<span class="k">done
+</span><span class="nv">Performance</span><span class="o">=</span> 21.69 GFlop/s, <span class="nv">Time</span><span class="o">=</span> 6.044 msec, <span class="nv">Size</span><span class="o">=</span> 131072000 Ops, <span class="nv">WorkgroupSize</span><span class="o">=</span> 1024 threads/block
+Checking computed result <span class="k">for </span>correctness: Result <span class="o">=</span> PASS
+</code></pre></div></div>
+
+<h3 id="52-install-cudnn-library">5.2 Install cuDNN library:</h3>
+<p>Download the cuDNN: https://developer.nvidia.com/cudnn</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:~/Downloads<span class="nv">$ </span><span class="nb">tar</span> <span class="nt">-xzvf</span> cudnn-8.0-linux-x64.v5.1.tgz
+</code></pre></div></div>
+
+<p>Check or copy the cuDNN files into the cuda-6.5:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:~/Downloads<span class="nv">$ </span><span class="nb">cd </span>cudnn/cudnn-6.5-linux-ARMv7-v2
+user@machine:~/cudnn/cudnn-6.5-linux-ARMv7-v2<span class="nv">$ </span><span class="nb">sudo </span>cp cudnn.h /usr/local/cuda-6.5/include
+user@machine:~/cudnn/cudnn-6.5-linux-ARMv7-v2<span class="nv">$ </span><span class="nb">sudo </span>cp libcudnn<span class="k">*</span> /usr/local/cuda-6.5/lib
+</code></pre></div></div>
+
+<h3 id="53-install-cuda-70">5.3 Install CUDA 7.0:</h3>
+<p>We need the cuda-7.0 SDK to generate the object files and compile with cuda-6.5.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:~/Downloads/<span class="nv">$ </span>wget http://developer.download.nvidia.com/embedded/L4T/r24_Release_v1.0/CUDA/cuda-repo-l4t-7-0-local_7.0-76_armhf.deb
+</code></pre></div></div>
+<p>Now install it as usual:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:~/Downloads/<span class="nv">$ </span><span class="nb">sudo </span>dpkg <span class="nt">-i</span> cuda-repo-l4t-7-0-local_7.0-76_armhf.deb 
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get update
+user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install cuda-toolkit-7-0
+user@machine<span class="nv">$ </span><span class="nb">cd</span> /usr/local   
+user@machine:/usr/local<span class="nv">$ </span><span class="nb">sudo </span>rm cuda   
+user@machine:/usr/local<span class="nv">$ </span><span class="nb">sudo </span>ln <span class="nt">-s</span> cuda-6.5/ cuda
+</code></pre></div></div>
+<p>Add path to .bashrc</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">"export CPAHT=/usr/local/cuda/include:</span><span class="nv">$CPATH</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> ~/.bashrc   
+user@machine<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">"export PAHT=/usr/local/cuda-6.5/bin:</span><span class="nv">$PATH</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> ~/.bashrc   
+user@machine<span class="nv">$ </span><span class="nb">echo</span> <span class="s2">"export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="s2">"</span> <span class="o">&gt;&gt;</span> ~/.bashrc   
+user@machine<span class="nv">$ </span><span class="nb">source</span> ~/.bashrc 
+</code></pre></div></div>
+
+<p>Check the CUDA compiler versions</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span>nvcc <span class="nt">-V</span>
+nvcc: NVIDIA <span class="o">(</span>R<span class="o">)</span> Cuda compiler driver
+Copyright <span class="o">(</span>c<span class="o">)</span> 2005-2014 NVIDIA Corporation
+Built on Tue_Feb_17_22:53:16_CST_2015
+Cuda compilation tools, release 6.5, V6.5.45
+
+user@machine<span class="nv">$ </span>/usr/local/cuda-7.0/bin/nvcc <span class="nt">-V</span>
+nvcc: NVIDIA <span class="o">(</span>R<span class="o">)</span> Cuda compiler driver
+Copyright <span class="o">(</span>c<span class="o">)</span> 2005-2015 NVIDIA Corporation
+Built on Mon_Feb_22_15:38:26_CST_2016
+Cuda compilation tools, release 7.0, V7.0.74
+</code></pre></div></div>
+
+<h2 id="6-build-and-install-tensorflow-080">6. Build and Install Tensorflow 0.8.0</h2>
+<p>This need several other packages:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine<span class="nv">$ </span><span class="nb">sudo </span>apt-get install libcurl3-dev swig  python-numpy python-dev 
+</code></pre></div></div>
+
+<p>Download and switchs to tensorflow 0.8</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/opt<span class="nv">$ </span>git clone <span class="nt">--recurse-submodules</span> https://github.com/tensorflow/tensorflow
+user@machineu:/opt<span class="nv">$ </span><span class="nb">cd </span>tensorflow
+user@machine:/opt/tensorflow<span class="nv">$ </span>git checkout r0.8
+Branch r0.8 <span class="nb">set </span>up to track remote branch r0.8 from origin.
+Switched to a new branch <span class="s1">'r0.8'</span>
+</code></pre></div></div>
+
+<p>TensorFlow is expecting a 64bit system, we will need to change all the reference from lib64 to lib.
+We can find all the files with the strings and apply all the changes with these commands:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>user@machine:/opt<span class="nv">$ </span><span class="nb">cd </span>tensorflow
+user@machine:/opt/tensorflow<span class="nv">$ </span><span class="nb">grep</span> <span class="nt">-Rl</span> <span class="s2">"lib64"</span>| xargs sed <span class="nt">-i</span> <span class="s1">'s/lib64/lib/g'</span>
+user@machine:/opt/tensorflow<span class="nv">$ </span><span class="nb">grep</span> <span class="nt">-Rl</span> <span class="s2">"so.7.0"</span>| xargs sed <span class="nt">-i</span> <span class="s1">'s/so\.7\.0/so\.6\.5/g'</span> //Not used
+</code></pre></div></div>
+
+<h3 id="references">References:</h3>
+<p><a href="https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html">This tutorial is an update of Massimiliano blog for building TensorFlow on Jetson TK1.</a></p>
+
+</div>
+
+		</section>
+
+		<!-- FOOTER  -->
+		<footer>
+			<p class="copyright">DiagnoseNET Wiki maintained by
+		          <a href="mailto:jagh1729@gmail.com">jagh1729@gmail.com</a></p>
+		</footer>
+	</div>
+	</body>
+</html>
