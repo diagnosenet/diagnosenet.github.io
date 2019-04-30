@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+	<title>Getting Started</title>
+	<link href="https://github.com/diagnosenet/diagnosenet.github.io/new/master/getstarted/atom.xml" rel="self"/>
+	<link href="https://github.com/diagnosenet/diagnosenet.github.io/new/master/getstarted"/>
+	<updated>2019-04-30T13:46:04+02:00</updated>
+	<id>http://diagnosenet.github.io/getstarted/</id>
+	<author>
+		<name>JAGH</name>
+		<email>jagh1729@gmail.com</email>
+	</author>
+
+	
+		<entry>
+			<title>Building Cluster on NVIDIA Jetson TK1</title>
+			<link href="http://diagnosenet.github.io/getstarted/2019/02/22/building-cluster-on-jetson-tk1"/>
+			<updated>2019-02-22T00:00:00+01:00</updated>
+			<id>http://diagnosenet.github.io/getstarted/2019/02/22/building-cluster-on-jetson-tk1</id>
+			<content type="html">&lt;h2 id=&quot;building-cluster-on-nvidia-jetson-tk1&quot;&gt;Building Cluster on NVIDIA Jetson TK1&lt;/h2&gt;
+
+&lt;h2 id=&quot;0-requirements&quot;&gt;0. Requirements:&lt;/h2&gt;
+
+&lt;p&gt;First, we need to add the Ubuntu’s Universe and Multiverse repositories as they contain packages that many instructions assume. Universe contains community maintained software and Multiverse contains non-free software (licensing restrictions etc.)&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-add-repository universe
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-add-repository multiverse
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Then, we need to upgrade the OS in the boards from Ubuntu 14.04.1 to 14.04.5 by running the following commands:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get upgrade
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, we need to install two packages: nano and OpenSSH. Nano is a terminal text editor needed to modify files directly on terminal. OpenSSH is a freely available version of the Secure Shell (SSH) protocol family of tools for remotely controlling or transferring files between computers. So on all the nodes, we run these two commands:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install nano
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install openssh-server
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;On the master node, we install this package:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install nfs-kernel-server
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;An on the workers node, we install this&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install nfs-common
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;MPICH2 is a freely available, portable implementation of MPI, a standard for message-passing for distributed-memory applications used in parallel computing. MPICH is supposed to be high-quality reference implementation of the latest MPI standard and the basis for derivative implementations to meet special purpose needs&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install mpich2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Hydra is the default process manager. For the version Ubuntu 14.04.5, the default version is 1.3.x, so the configuration will follow the Hydra process manager.&lt;/p&gt;
+
+&lt;h2 id=&quot;1-setting-up-static-ip-addresses&quot;&gt;1. Setting up static IP Addresses:&lt;/h2&gt;
+&lt;p&gt;In order for us to establish a network between the cluster through Ethernet cables we will need to assign static IP Addresses to each of the nodes. To do this, we need to edit the interfaces file on each node. This can be done by doing the following:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/network/interfaces
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Then modify the file as follow:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# The loopback network interface&lt;/span&gt;
+auto lo
+iface lo inet loopback
+
+&lt;span class=&quot;c&quot;&gt;# The primary network interface&lt;/span&gt;
+auto eth0
+iface lo inet loopback
+address 192.168.137.10
+netmask 255.255.255.0
+gateway 192.168.137.1
+dns-nameservers 192.168.137.1 8.8.8.8
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;To be able to distinguish between nodes without remembering there IP Addresses, we want to assign name on each node by changing the hostname file&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/hostname
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Here, I set the name for the master node is tegra1-c78, with c78 is the last three characters in its MAC address so that I can recognize them when working with the hardware.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tegra1-c78
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Similarly, I have the name for the three other nodes are:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tegra2-c3e
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tegra3-c8f
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tegra4-cdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We need to do the same to change the name for other nodes. Then, in the hosts file of each node, we will add the static IP addresses of all the nodes so that to can connect to each other from any node.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/hosts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We need to change the content as below for all the boards. However, for the second line, we have to change the name in order to make sure it is the same hostname as the board we am modifying.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;127.0.0.1 localhost
+127.0.0.1 tegra1-c78
+192.168.137.10 tegra1-c78
+192.168.137.11 tegra2-c3e
+192.168.137.12 tegra3-c8f
+192.168.137.13 tegra4-cdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;To apply the changes, we have to reboot all the nodes using the command:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;reboot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;After the boards turning on, on each node, we have to use the new static IP Address in order to remote them. We can notice that the hostnames have also changed. To check if our settings are applied by checking the resolv.conf to see if the nameservers are added.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /etc/revolv.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We will see something like this&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;nameserver 192.168.137.1
+nameserver 8.8.8.8
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;If the output is the same for all the nodes as above, we have changed the static IP addresses successfully.&lt;/p&gt;
+
+&lt;h2 id=&quot;2-setting-up-ssh-remote-login&quot;&gt;2. Setting up SSH remote login&lt;/h2&gt;
+
+&lt;p&gt;Since we want the cluster nodes to communicate with each other without having to ask for permission each time we will set up SSH (Secure Shell) remote login.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh-keygen &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; rsa &lt;span class=&quot;nt&quot;&gt;-b&lt;/span&gt; 2048
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Now, we will copy the SSH ID to all the nodes including the head node.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh-copy-id tegra1-c78
+ssh-copy-id tegra2-c3e
+ssh-copy-id tegra3-c8f
+ssh-copy-id tegra4-cdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Then, we will need to build the known_hosts file in the .ssh directory. The known_hosts holds id of all the nodes in the cluster and allows password-less access to and from all the nodes in the cluster. To do this we need to create file with the name of all nodes in the .ssh folder and then use ssh keyscan to generate the known_hosts file.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; .ssh
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano name_of_hosts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We will save this file and then change its permissions in order for ssh-keyscan to be able to read the file. Ssh-keyscan is a utility for gathering the public ssh host keys of a number of hosts. It was designed to aid building and verifying ssh_known_hosts file.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd
+sudo &lt;/span&gt;chmod 666 ~/.ssh/name_of_hosts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;In this command, chmod 666 means that we will set the permission so that everyone can read and write this file.
+The following command will then generate the known_hosts file:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh-keyscan &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; rsa &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; ~/.ssh/name_of_hosts &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;~/.ssh/known_hosts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;In this case, -t specifies the type of the key to fetch from the scanned hosts, as we are using RSA key-pair so we put rsa after –t. Next, -f means the ssh-keyscan will read the hosts from a file, one per line .
+Our last step for this setup will be to copy known_hosts, id_rsa public and private keys from the .ssh folder in the head node to the .ssh folder of all the other nodes. Public host keys are stored on and distributed to SSH clients, private keys are stored on SSH servers. We can do this using secure copy. Secure copy (scp) allows files to be copied to, from or between different hosts. It uses SSH for data transfer and provides the same authentication and same level of security as SSH. We use the following steps on the head node to do this:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; .ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra1-c78:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra2-c3e:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra3-c8f:.ssh
+scp known_hosts id_rsa id_rsa.pub ubuntu@tegra4-cdf:.ssh 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Now, we can remote other nodes using SSH protocol from any node in the cluster without password.&lt;/p&gt;
+
+&lt;h2 id=&quot;3-mount-network-file-system&quot;&gt;3. Mount Network File System&lt;/h2&gt;
+
+&lt;p&gt;The Network File System (NFS) mounting is crucial part of the cluster set up in order for all the nodes to have one common working directory. We are going to use the nfs-kernel-server and nfs-common which we had installed earlier. To do that, we will need to create the mount point for the HDD on the master node. Make sure that the mount point is not in the home directory of the ubuntu user. We chose to put it in / as follows:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkdir /media/cluster_files
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Then we can check the drive by using the command&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;fdisk –l
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Information about the new connected device will display with name /dev/sda. We will need this to make the location.
+/dev/ is the part of the unix directory tree that contains all device files, sda signifies the order of the device in which it was first found, so if there is a second device that is added into the system, it will be named as sdb. we have to set the new added device as type ext4 and mount it to the directory where we wish to share with other nodes.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkfs.ext4 /dev/sda &lt;span class=&quot;nt&quot;&gt;-L&lt;/span&gt; cluster_files
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Next, we will edit the exports file on the master node. This file will contain the information as to where we will be exporting the cluster_files directory on the slaves.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/exports
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Add the following line at the end:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/media/cluster_files &lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;rw,sync,no_subtree_check&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The /etc/exports file controls which file systems are exported to remote hosts and specifies options. It contains a table of local physical file systems on an NFS server that are accessible to NFS clients. The contents of the file are maintained by the server’s system administrator. In my setting, rw stands for the file system that is writable, sync means reply clients after data have been stored to stable storage and no_subtree_check will disable subtree checking, which has mild security implications 
+We will need to permanently mount the external drive on the head node so that it automatically mounts itself in /media/cluster_files when the system is rebooted. To do this we will edit the fstab file on the master node by adding the following line at the end:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/fstab
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;/dev/sda1 /media/cluster_files ext4 defaults 0 0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The fstab file is used to define how disk partitions should be mounted into the file system, it contains the necessary information to automate the process of mounting partitions. Now, we can mount the external drive on the master node permanently.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mount /dev/sda /media/cluster_files
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The slave nodes will now need to mount this external drive and we will need to make the cluster_files directory and edit the fstab file on each of the slave nodes:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkdir /media/cluster_files
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;nano /etc/fstab
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Add in the end the following:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tegra1-c78:/media/cluster_files /media/cluster_files nfs &lt;span class=&quot;nv&quot;&gt;rsize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;8192,wsize&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;8192,timeo&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;14,intr
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;With rsize is the number of bytes NFS uses when reading files from an NFS server, wsize is the number of bytes NFE uses when writing files from an NFS server, timeo is the value in tenths of a second before sending the first retransmission and intr means the operations is not allowed to interrupt. Now our NFS mounting should be complete. In order to check this, we will first restart our cluster. Once the cluster is restarted, we will simply copy some files to this directory on master node and check on other that whether they have those files on this directory.&lt;/p&gt;
+
+&lt;h2 id=&quot;4-message-passing-interface-configuration&quot;&gt;4. Message Passing Interface configuration&lt;/h2&gt;
+
+&lt;p&gt;In order to setup Hydra, we need to create one file on the master node. This file contains all the host names of the compute nodes. We can create this file anywhere we want, but for simplicity we create it in the NFS shared folder.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /media/cluster_files
+touch hosts
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;To be able to send out jobs to the other nodes in the network, add the host names of all compute nodes to the hosts file&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;192.168.137.10:4
+192.168.137.11:4
+192.168.137.12:4
+192.168.137.13:4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;We need to choose to include master in this file, which would mean that the master node would also act as a compute node. The hosts file only needs to be present on the node that will be used to start jobs on the cluster, usually the master node. But because the home directory is shared among all nodes, all nodes will have the hosts file.&lt;/p&gt;
+
+&lt;h2 id=&quot;5-running-mpich2-example-applications-on-the-cluster&quot;&gt;5. Running MPICH2 example applications on the cluster&lt;/h2&gt;
+&lt;p&gt;The MPICH2 package comes with a few example applications that users can run on their cluster. To obtain these examples, download the MPICH2 source package from the MPICH website and extract the archive to a directory. We will check by running an example code which is CPI. CPI is a c program that using MPICH2 library to display the number of processors that will be used to run it. We need to execute the following command to use all 16 processors of four Jetson Tegra K1 boards by using this command:4&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get build-dep mpich2
+wget http://www.mpich.org/static/downloads/1.4.1/mpich2-1.4.1.tar.gz
+&lt;span class=&quot;nb&quot;&gt;tar&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-xvzf&lt;/span&gt; mpich2-1.4.1.tar.gz
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;mpich2-1.4.1/
+./configure
+make
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;examples/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;You can try with any source code you want, as in this case, I will try with CPI:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;mpiexec –f hosts –n 16 bin/cpi
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Up to now, we have already finished building a cluster with four Jetson Tegra K1 boards and be able to run some examples using MPI.&lt;/p&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References:&lt;/h2&gt;
+&lt;p&gt;Allan, A. (2015, August 26). Build a Compact 4 Node Raspberry Pi Cluster. Retrieved from https://makezine.com/projects/build-a-compact-4-node-raspberry-pi-cluster/&lt;/p&gt;
+
+&lt;p&gt;Arrow. (2017, September 17). Drive name? What is the correct term for the “sda” part of “/dev/sda”? Retrieved from Stack Exchange: https://unix.stackexchange.com/questions/392701/drive-name-what-is-the-correct-term-for-the-sda-part-of-dev-sda&lt;/p&gt;
+
+&lt;p&gt;Barney, B. (2018, July 6). Message Passing Interface (MPI). Retrieved from https://computing.llnl.gov/tutorials/mpi/&lt;/p&gt;
+
+&lt;p&gt;Building a Nvidia Jetson TK1 Cluster. (2017, August 17). Retrieved from http://selkie-macalester.org/csinparallel/modules/RosieCluster/build/html/#physical-cluster-set-up&lt;/p&gt;
+
+&lt;p&gt;ckimes. (2017, August 21). Introduction to fstab. Retrieved from Ubuntu: https://help.ubuntu.com/community/Fstab&lt;/p&gt;
+
+&lt;p&gt;Dalcin, L. (2017). MPI for Python. Retrieved from mpi4py: https://mpi4py.readthedocs.io/en/stable/&lt;/p&gt;
+
+&lt;p&gt;Embedded system. (2018, September 25). Retrieved from Wikipedia: https://en.wikipedia.org/wiki/Embedded_system&lt;/p&gt;
+
+&lt;p&gt;Example syntax for Secure Copy. (n.d.). Retrieved from Hypexr: http://www.hypexr.org/linux_scp_help.php&lt;/p&gt;
+
+&lt;p&gt;HILDENBRAND, J. (2014, August 3). A look at NVIDIA’s Jetson TK1. Retrieved from androidcentral: https://www.androidcentral.com/look-nvidias-jetson-tk1&lt;/p&gt;
+
+&lt;p&gt;HOST KEY. (2017, August 3). Retrieved from SSH: https://www.ssh.com/ssh/host-key
+japinator. (2015, December 29).&lt;/p&gt;
+
+&lt;p&gt;Configure a static IP on Ubuntu Server 14.04. Retrieved from VSYSAD: http://www.vsysad.com/2015/12/configure-a-static-ip-on-ubuntu-server-14-04/&lt;/p&gt;
+
+&lt;p&gt;JetPack. (n.d.). Retrieved from NVIDIA Embedded Computing: https://developer.nvidia.com/embedded/jetpack&lt;/p&gt;
+
+&lt;p&gt;Jetson TK1. (2018, July 5). Retrieved from eLinux: https://elinux.org/Jetson_TK1&lt;/p&gt;
+
+&lt;p&gt;Kendall, W. (2018). MPI Broadcast and Collective Communication. Retrieved from MPI Tutorial: http://mpitutorial.com/tutorials/mpi-broadcast-and-collective-communication/&lt;/p&gt;
+
+&lt;p&gt;Kendall, W. (2018). MPI Scatter, Gather, and Allgather. Retrieved from MPI Tutorial: http://mpitutorial.com/tutorials/mpi-scatter-gather-and-allgather/&lt;/p&gt;
+
+&lt;p&gt;Kuan-Yu Yeh, H.-J. C.-D.-Y. (2016). Constructing a GPU Cluster Platform based on Multiple NVIDIA Jetson TKI. 2016 IEEE International Conference on Bioinformatics and Biomedicine (BIBM).&lt;/p&gt;
+
+&lt;p&gt;kulve. (2014, October 29). My Jetson focused Linux tips and tricks. Retrieved from NVIDIA Developer: https://devtalk.nvidia.com/default/topic/785551/embedded-systems/my-jetson-focused-linux-tips-and-tricks/&lt;/p&gt;
+
+&lt;p&gt;Li, A. &amp;amp;. (2014, November). An Overview of NVIDIA Tegra K1 Architecture. Retrieved from ResearchGate: https://www.researchgate.net/figure/NVIDIA-Tegra-K1-mobile-processor-32-bit-version_fig1_326920932&lt;/p&gt;
+
+&lt;p&gt;MASSIMILIANO. (2015, November 27). Building TensorFlow for Jetson TK1. Retrieved from CUDA MUSING: https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html&lt;/p&gt;
+
+&lt;p&gt;Mazieres, D., &amp;amp; Davison, W. (2018, March 5). ssh-keyscan. Retrieved from OpenBSD: https://man.openbsd.org/ssh-keyscan&lt;/p&gt;
+
+&lt;p&gt;MPICH . (n.d.). Retrieved from MPICH : https://www.mpich.org/&lt;/p&gt;
+
+&lt;p&gt;NVIDIA. (2018). Develop, Optimize and Deploy GPU-accelerated Apps. Retrieved from NVIDIA Developer: https://developer.nvidia.com/cuda-toolkit&lt;/p&gt;
+
+&lt;p&gt;NVIDIA. (2018). NVIDIA cuDNN. Retrieved from NVIDIA Developer: https://developer.nvidia.com/cudnn&lt;/p&gt;
+
+&lt;p&gt;Open MPI: Open Source High Performance Computing. (n.d.). Retrieved from Open MPI: https://www.open-mpi.org/&lt;/p&gt;
+
+&lt;p&gt;Pant, S. R. (2018, September 1). What is RSA? Retrieved from Quora: https://www.quora.com/What-is-RSA&lt;/p&gt;
+
+&lt;p&gt;Pereira, S. (2013, September 11). Building a simple Beowulf cluster with Ubuntu. Retrieved from https://www-users.cs.york.ac.uk/~mjf/pi_cluster/src/Building_a_simple_Beowulf_cluster.html&lt;/p&gt;
+
+&lt;p&gt;pl_rock. (2017, February 17). Failed to fetch http://ppa.launchpad.net [duplicate]. Retrieved from askubuntu: https://askubuntu.com/questions/879064/failed-to-fetch-http-ppa-launchpad-net&lt;/p&gt;
+
+&lt;p&gt;Slurm Workload Manager. (2013, March 6). Retrieved from SchedMD: https://slurm.schedmd.com/overview.html&lt;/p&gt;
+
+&lt;p&gt;Smith, C. (2006, May 2). Linux NFS-HOWTO. Retrieved from http://nfs.sourceforge.net/nfs-howto/ar01s02.html#whatis_nfs&lt;/p&gt;
+
+&lt;p&gt;THE /ETC/EXPORTS CONFIGURATION FILE. (n.d.). Retrieved from redhat: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/5/html/deployment_guide/s1-nfs-server-config-exports&lt;/p&gt;
+
+</content>
+		</entry>
+	
+		<entry>
+			<title>Install TensorFlow on NVIDIA Jetson TK1</title>
+			<link href="http://diagnosenet.github.io/getstarted/2018/12/03/tensorflow-installation-jetsontk1"/>
+			<updated>2018-12-03T00:00:00+01:00</updated>
+			<id>http://diagnosenet.github.io/getstarted/2018/12/03/tensorflow-installation-jetsontk1</id>
+			<content type="html">&lt;h2 id=&quot;building-tensorflow-for-jetson-tk1&quot;&gt;Building TensorFlow for Jetson TK1:&lt;/h2&gt;
+&lt;p&gt;We assume that latest JetPack was used to flash the Jetson Tk1.&lt;/p&gt;
+
+&lt;h2 id=&quot;0-requirements&quot;&gt;0. Requirements:&lt;/h2&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install swig
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install build-essential gfortran libatlas-base-dev python-pip python-dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;1-java8&quot;&gt;1. Java8:&lt;/h2&gt;
+&lt;p&gt;the first step is to install Java8, but this is quite simple since Oracle provides a package:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;add-apt-repository ppa:webupd8team/java
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install oracle-java8-installer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;2-protobuf&quot;&gt;2. Protobuf:&lt;/h2&gt;
+&lt;p&gt;Build and Install protobuf:&lt;/p&gt;
+
+&lt;p&gt;This need several other packages:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install git zip unzip autoconf automake libtool curl zlib1g-dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Download the latest protobuf source from github:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chown &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; ubuntu:ubuntu /opt
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /opt
+user@machine:/opt/&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone https://github.com/google/protobuf.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;First generate the configuration file and then run make:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /opt/protobuf
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./autogen.sh
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./configure &lt;span class=&quot;nt&quot;&gt;--prefix&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;/usr
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;make &lt;span class=&quot;nt&quot;&gt;-j&lt;/span&gt; 4
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;make install
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;protoc &lt;span class=&quot;nt&quot;&gt;--version&lt;/span&gt;
+libprotoc 3.4.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;21-maven&quot;&gt;2.1. Maven:&lt;/h2&gt;
+&lt;p&gt;Install Maven java interface for building protobuf
+&lt;code class=&quot;highlighter-rouge&quot;&gt;user@machine$ sudo apt-get install maven&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;generate-the-protobuf-java-341jar-to-jetson-architecture&quot;&gt;Generate the protobuf-java-3.4.1.jar to Jetson Architecture:&lt;/h3&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;mvn &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; java/pom.xml package
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO] &lt;span class=&quot;nt&quot;&gt;---&lt;/span&gt; maven-bundle-plugin:3.0.1:bundle &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;default-bundle&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; @ protobuf-java-util &lt;span class=&quot;nt&quot;&gt;---&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;INFO] ...
+
+user@machine:/opt/protobuf&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls &lt;/span&gt;java/core/target/
+protobuf-java-3.4.1.jar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;3-bazel&quot;&gt;3. Bazel:&lt;/h2&gt;
+&lt;p&gt;Install bazel to compile TensorFlow 0.8.0:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /opt
+user@machine:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt; git clone https://github.com/bazelbuild/bazel.git
+user@machine:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;bazel
+user@machine:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git checkout tags/0.1.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Copy the files generated to Jetson architecture:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cp /usr/bin/protoc  third_party/protobuf/protoc-linux-arm32.exe
+user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;cp ../protobuf/java/core/target/protobuf-java-3.4.1.jar third_party/protobuf/protobuf-java-3.0.0-beta-1.jar
+user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;rm third_party/protobufprotobuf-java-3.0.0-beta-1.jar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Compile Bazel:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./compile.sh
+Build successful! Binary is here: /opt/bazel/output/bazel
+
+user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp output/bazel /usr/local/bin/
+user@machine:/opt/bazel&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; /usr/local/bin/bazel
+/usr/local/bin/bazel
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;4-add-swap-memory&quot;&gt;4. Add Swap Memory:&lt;/h2&gt;
+&lt;p&gt;Plug usb memory and use it as swap&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;fdisk &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;check the device name of usb memory. This &lt;span class=&quot;nb&quot;&gt;time&lt;/span&gt;, the name is /dev/sda1&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;umount /dev/sda1     
+    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;This is not typo. &lt;span class=&quot;s2&quot;&gt;&quot;umount&quot;&lt;/span&gt; is correct.&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkswap /dev/sda1
+    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;There are some outputs.&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;swapon /dev/sda1
+    &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;There are some outputs.&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;5-install-cuda-65-cudnn-v2-and-cuda-70&quot;&gt;5. Install CUDA 6.5, cuDNN v2 and CUDA-7.0:&lt;/h2&gt;
+&lt;h3 id=&quot;51-install-cuda-65&quot;&gt;5.1 Install CUDA 6.5:&lt;/h3&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda-repo-l4t-r21.2-6-5-prod_6.5-34_armhf.deb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Jetson TK1 Version&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;dpkg &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; cuda-repo-l4t-r21.2-6-5-prod_6.5-34_armhf.deb   
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update 
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install cuda-toolkit-6-5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Check that nvcc is working:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/usr/local/cuda-6.5&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;chown &lt;span class=&quot;nt&quot;&gt;-R&lt;/span&gt; ubuntu:ubuntu samples/
+user@machine:/usr/local/cuda-6.5&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;samples/0_Simple/matrixMul
+user@machine:/usr/local/cuda-6.5/samples/0_Simple/matrixMul&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;make
+user@machine:/usr/local/cuda-6.5/samples/0_Simple/matrixMul&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./matrixMul
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Matrix Multiply Using CUDA] - Starting...
+GPU Device 0: &lt;span class=&quot;s2&quot;&gt;&quot;GK20A&quot;&lt;/span&gt; with compute capability 3.2
+
+MatrixA&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;320,320&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, MatrixB&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;640,320&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+Computing result using CUDA Kernel...
+&lt;span class=&quot;k&quot;&gt;done
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Performance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 21.69 GFlop/s, &lt;span class=&quot;nv&quot;&gt;Time&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 6.044 msec, &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 131072000 Ops, &lt;span class=&quot;nv&quot;&gt;WorkgroupSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 1024 threads/block
+Checking computed result &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;correctness: Result &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; PASS
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;52-install-cudnn-library&quot;&gt;5.2 Install cuDNN library:&lt;/h3&gt;
+&lt;p&gt;Download the cuDNN: https://developer.nvidia.com/cudnn&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:~/Downloads&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;tar&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-xzvf&lt;/span&gt; cudnn-8.0-linux-x64.v5.1.tgz
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Check or copy the cuDNN files into the cuda-6.5:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:~/Downloads&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;cudnn/cudnn-6.5-linux-ARMv7-v2
+user@machine:~/cudnn/cudnn-6.5-linux-ARMv7-v2&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp cudnn.h /usr/local/cuda-6.5/include
+user@machine:~/cudnn/cudnn-6.5-linux-ARMv7-v2&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;cp libcudnn&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; /usr/local/cuda-6.5/lib
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;53-install-cuda-70&quot;&gt;5.3 Install CUDA 7.0:&lt;/h3&gt;
+&lt;p&gt;We need the cuda-7.0 SDK to generate the object files and compile with cuda-6.5.&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:~/Downloads/&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget http://developer.download.nvidia.com/embedded/L4T/r24_Release_v1.0/CUDA/cuda-repo-l4t-7-0-local_7.0-76_armhf.deb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Now install it as usual:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:~/Downloads/&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;dpkg &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; cuda-repo-l4t-7-0-local_7.0-76_armhf.deb 
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install cuda-toolkit-7-0
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; /usr/local   
+user@machine:/usr/local&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;rm cuda   
+user@machine:/usr/local&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;ln &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; cuda-6.5/ cuda
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Add path to .bashrc&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;export CPAHT=/usr/local/cuda/include:&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$CPATH&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.bashrc   
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;export PAHT=/usr/local/cuda-6.5/bin:&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$PATH&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.bashrc   
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;export LD_LIBRARY_PATH=/usr/local/cuda-7.0/lib:&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$LD_LIBRARY_PATH&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;&lt;/span&gt; ~/.bashrc   
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;source&lt;/span&gt; ~/.bashrc 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Check the CUDA compiler versions&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;nvcc &lt;span class=&quot;nt&quot;&gt;-V&lt;/span&gt;
+nvcc: NVIDIA &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;R&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; Cuda compiler driver
+Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;c&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2005-2014 NVIDIA Corporation
+Built on Tue_Feb_17_22:53:16_CST_2015
+Cuda compilation tools, release 6.5, V6.5.45
+
+user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;/usr/local/cuda-7.0/bin/nvcc &lt;span class=&quot;nt&quot;&gt;-V&lt;/span&gt;
+nvcc: NVIDIA &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;R&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; Cuda compiler driver
+Copyright &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;c&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2005-2015 NVIDIA Corporation
+Built on Mon_Feb_22_15:38:26_CST_2016
+Cuda compilation tools, release 7.0, V7.0.74
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;6-build-and-install-tensorflow-080&quot;&gt;6. Build and Install Tensorflow 0.8.0&lt;/h2&gt;
+&lt;p&gt;This need several other packages:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get install libcurl3-dev swig  python-numpy python-dev 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Download and switchs to tensorflow 0.8&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git clone &lt;span class=&quot;nt&quot;&gt;--recurse-submodules&lt;/span&gt; https://github.com/tensorflow/tensorflow
+user@machineu:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;tensorflow
+user@machine:/opt/tensorflow&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;git checkout r0.8
+Branch r0.8 &lt;span class=&quot;nb&quot;&gt;set &lt;/span&gt;up to track remote branch r0.8 from origin.
+Switched to a new branch &lt;span class=&quot;s1&quot;&gt;'r0.8'&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;TensorFlow is expecting a 64bit system, we will need to change all the reference from lib64 to lib.
+We can find all the files with the strings and apply all the changes with these commands:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;user@machine:/opt&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;tensorflow
+user@machine:/opt/tensorflow&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-Rl&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;lib64&quot;&lt;/span&gt;| xargs sed &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'s/lib64/lib/g'&lt;/span&gt;
+user@machine:/opt/tensorflow&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-Rl&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;so.7.0&quot;&lt;/span&gt;| xargs sed &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'s/so\.7\.0/so\.6\.5/g'&lt;/span&gt; //Not used
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;references&quot;&gt;References:&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://cudamusing.blogspot.com/2015/11/building-tensorflow-for-jetson-tk1.html&quot;&gt;This tutorial is an update of Massimiliano blog for building TensorFlow on Jetson TK1.&lt;/a&gt;&lt;/p&gt;
+</content>
+		</entry>
+	
+
+</feed>
