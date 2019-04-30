@@ -19,52 +19,59 @@
 {"headline":"DiagnoseNET","description":"DiagnoseNET Wiki","@type":"WebSite","url":"http://localhost:4000/","name":"DiagnoseNET Application-Framework","@context":"http://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
-    <link rel="stylesheet" href="/assets/css/style.css?v=abe2182cc2a9ab6e5f6061f37b8cba08fe25f176">
-    
+    <link rel="stylesheet" href="/assets/css/style.css?v=208a9ee7a14219f46e9c55cc3ebee861760d457d">
+
   </head>
 	<body>
     	<div class="wrapper">
 		<!-- HEADER -->
         	<header>
-			<img src="assets/img/logo.png" alt="Logo"/>
-			<h2 id="project_tagline">DiagnoseNET Wiki</h2>
+			      <img src="/assets/img/logo.png" alt="DiagnoseNET" />
+			      <h2 id="project_tagline">DiagnoseNET Wiki</h2>
 
-	        	<p><a href="/">Home</a></p>
-	        	<p><a href="/getstarted">Getting Started</a></p>
-              		<p><a href="/doc">API Documentation</a></p>
+            <iframe src="https://ghbtns.com/github-btn.html?user=IADBproject&repo=diagnosenet&type=star&count=true&size=large"
+                frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+
+            <p>
+              <a href="/">Home</a> <br>
+              <a href="/getstarted">Getting Started</a> <br>
+              <a href="/doc">API Documentation</a> <br>
+            </p>
 		</header>
 
 		<!-- MAIN CONTENT -->
 		<section class="container">
-			<div class="blurb">
-	<h1>DiagnoseNET</h1>
-	<p>Is a development application-framework for tailoring deep neural networks to computational architectures 
-		with an efficient balance between accuracy and energy consumption. 
-		The first application built is for deploying medical diagnostic tools inside the hospitals. 
-		In which, a feedforward network was trained on mini-cluster Jetson TX2, 
-		delivering the performance of an HPC platform in embedded modules with minimal infrastructure requirements 
-		and low power consumption.</p>
-	<p>DiagnoseNET is extending TensorFLow library to characterize the deep learning 
-		tasks and improve the balance between accuracy and energy-efficient performance. 
-		The Package provides three high-level features:
-		<ol>
-			<li>A medical diagnostic workflow for deploying inside the hospitals, which is divided into three stages:
-				<ol>
-					<li>The first stage mining electronic health records to build a binary matrix of patients clinical descriptors.</li>
-					<li>The second stage embedding the patient’s binary matrix via an unsupervised learning 
-						to obtain a new latent space and identify the patient’s phenotypic representations.</li>
-					<li>The last stage focuses on supervised learning using the latent representation of patients as an input 
-						for a machine learning algorithms or as an initialiser for deep neural networks.</li>
-				</ol></li>
-			<li>A multi-platform training DNN model: This module integrates a data and resource manager for training the DNN model, 
-				over: CPU-GPU desktop machines, on multi-GPU nodes or in the embedded computation cluster of Jetson TX2.
-				</li>
-			<li>An energy-monitoring tool for workload characterization: 
-				This module deploys an energy monitor to collect the energy consumption metrics while 
-				the DNN model is executed on the target platform for analyzing the balance between accuracy 
-				and energy consumption.
-				</li>
-		</ol>
+			<div id="wrapperHeader">
+	<div id="header">
+		<img src="/assets/img/diagnosenet-proposal.png" alt="DiagnoseNET" />
+	</div>
+</div>
+
+<div class="blurb">
+	<p> <span style="font-weight:bold;"> DiagnoseNET </span> is an open source framework
+		for tailoring deep neural networks into different computational architectures
+		from CPU-GPU implementation to multi-GPU and multi-nodes with an efficient ratio
+		between accuracy and energy consumption.
+		It is oriented to propose a green intelligence medical workflow
+		for deploying medical diagnostic tools inside the hospitals
+		with minimal infrastructure requirements and low power consumption. </p>
+
+	<p> The first application built was to automate the
+		<a href="https://link.springer.com/chapter/10.1007/978-3-030-16205-4_1">
+			unsupervised patient phenotype representation workflow</a>
+		trained on a mini-cluster of Nvidia Jetson TX2. This workflow was divided into three stages:
+
+	<ol>
+		<li>The first stage mining electronic health records for patient feature extraction
+			and serialised each patient record in a clinical document architecture schema to create
+			a binary patient representation.</li>
+		<li>The second stage embedding the patient’s binary matrix via an unsupervised learning
+			to obtain a new latent space and identify the patient’s phenotypic representations.</li>
+		<li>The last stage focuses on supervised learning using the patient's features
+			(binary or latent representation) as an input for machine learning algorithms
+			or as an initialiser for deep neural networks.</li>
+	</ol>
+
 </div><!-- /.blurb -->
 
 		</section>
