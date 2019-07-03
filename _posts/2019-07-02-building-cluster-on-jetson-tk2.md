@@ -1,4 +1,8 @@
-# Setting up the Jetson array
+---
+layout: post
+title: "Building Cluster on NVIDIA Jetson TK2"
+date: 2019-07-02
+---
 
 This is a guide to setting up the Jetson array for our experiments. We use TensorFlow 1.3 with CUDA 8.0 and CuDNN 6.0.
 
