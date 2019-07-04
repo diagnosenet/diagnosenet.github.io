@@ -10,13 +10,21 @@ This is a guide to setting up the Jetson array for our experiments. We use Tenso
 
 ### The nodes
 
-We are working on a Nvidia Jetson TX2 array, containing 24 nodes, each with its own CPU, GPU and storage. The CPU architecture is ARM (aarch64), which mush be taken into account when building and installing software. Every node in the array is an independent machine and must be configured separately.
+We are working on a Nvidia Jetson TX2 array, containing 24 nodes, each with its own CPU, GPU and storage. The CPU architecture is ARM (aarch64), which mush be taken into account when building and installing software.
+
+Every node runs an Ubuntu 16.04 operating system and has Internet access. They are independent machines and must be configured separately.
 
 ### The storage
 
 Each node owns 30GB of local storage, represented by the bock device `/dev/mmcblk0`.
 
-In addition, nodes numbered 7, 15 and 23 each have access to one 1TB SSD, through their block device `/dev/sda`. We will share these three SSD with the Network File System, to allow every node to use this storage.
+In addition, nodes numbered 7, 15 and 23 each have access to one 1TB SATA SSD, through their block device `/dev/sda`. We will share these three SSD with the Network File System, to allow every node to use this storage.
+
+### The management interface
+
+All nodes are connected by serial port to an out-of-band management (OOBM) interface, running an Ubuntu 14.04 operating system. Through this interface, it is possible to control all the nodes with the program `minicom`, as described in the next sections.
+
+The OOBM interface is controlled by an Ubuntu 14.04 operating system. Like the nodes, it is accessible by SSH and has Internet access.
 
 ## Connect to the array
 
@@ -30,7 +38,7 @@ IP addresses referenced in this document are local to the I3S network and **not 
 
 ### Access the nodes through the network
 
-There are **two ways** of accessing the nodes: through the management interface, or directly with each node's IP address.
+There are **two ways** of accessing the nodes: through the management interface, or directly by SSH with each node's IP address.
 
 #### The OOBM interface
 
@@ -40,7 +48,7 @@ The out-of-band management interface is accessible _via_ SSH:
 ssh utx@XXX.XXX.XXX.XXX
 ```
 
-Once logged into this interface, you can open a shell on each node _via_ the serial port with the `minicom` program:
+Once logged into this interface, you can open a shell on each node, using the serial port with the `minicom` program:
 
 ```bash
 sudo minicom -D /dev/ttyUSB$X
@@ -109,8 +117,6 @@ sudo mkdir /exports
 echo '/dev/sda /exports ext4 defaults 0 2' | sudo tee -a /etc/fstab
 sudo mount /exports
 ```
-
-
 
 ## Install TensorFlow
 
