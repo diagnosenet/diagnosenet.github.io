@@ -178,7 +178,7 @@ We need to install TensorFlow 1.3, CUDA 8.0 and CuDNN 6.0 on every node. TensorF
 Since these options are not standard, and MPI and HDFS are not supported by the `tensorflow-gpu` package in pip, we need to compile TensorFlow ourselves. This is done with the installation scripts on the project's git repository:
 
 ```bash
-git clone git@github.com:IADBproject/buildEmbeddedClusters.git
+git clone https://github.com/IADBproject/buildEmbeddedClusters.git
 ```
 
 Run the installation script:
