@@ -181,22 +181,18 @@ Since these options are not standard, and MPI and HDFS are not supported by the 
 git clone git@github.com:IADBproject/buildEmbeddedClusters.git
 ```
 
-Run the installation scripts in the right order:
+Run the installation script:
 
 ```bash
 cd buildEmbeddedClusters/UTXJetson2/buildTensorFlow
-./0-installPrerequisites.sh
-./1-installBazel.sh
-./2-buildAndInstallMVAPICH.sh
-./3-installCUDA.sh
-./4-buildAndInstallTensorFlow.sh
+./installOneNode.sh
 ```
 
-During the installation, you may be asked again for the node's administrator password. Since some parts (compilation of large codebases) take more than 15 minutes, this could happen several times.
+You may be asked immediately for the `nvidia` user's password. The rest of the installation should work unattended. This will probably take more than 10 minutes, since a large compilation step is required.
 
-After having ran all these scripts, CUDA and TensorFlow should be set up on the node.
+*Note: this installation process will be automated in the future, with one script launching the installation on every nodes through the OOBM interface.*
 
-This installation process will be automated in the future, with one script launching the installation on every nodes through the OOBM interface.
+At this point, CUDA and TensorFlow should be set up on the node and ready to run experiments.
 
 ## Test the installation
 
