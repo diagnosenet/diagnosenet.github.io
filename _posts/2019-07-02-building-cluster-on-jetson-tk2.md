@@ -167,7 +167,7 @@ sudo mkdir -p /mnt/cluster_data/cluster0
 sudo mount -t nfs -o proto=tcp,port=2049 XXX.XXX.XXX.XXX:/exports /mnt/cluster_data/cluster0
 ```
 
-## Install TensorFlow
+## Install TensorFlow and CUDA
 
 We need to install TensorFlow 1.3, CUDA 8.0 and CuDNN 6.0 on every node. TensorFlow must be compiled with support for:
 
