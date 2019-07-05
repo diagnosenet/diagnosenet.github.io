@@ -74,6 +74,8 @@ The installation of CUDA and TensorFlow in the next section requires a large ins
 
 ### On the server
 
+#### Setting up the NFS
+
 Connect to node 15, which will be the master for this NFS:
 
 ```bash
@@ -129,6 +131,24 @@ Finally, restart the NFS server to apply the changes:
 ```bash
 sudo systemctl restart nfs-kernel-server.service
 ```
+
+#### Copying the TensorFlow and CUDA installation package
+
+Get the installation package from the link under "Installation package location" in the private documentation. Copy it to node 15 through SSH (the following command must be ran on the machine that downloaded the package; replace `XXX.XXX.XXX.XXX` with the address of node 15):
+
+```bash
+scp path_to_download/UTXJetson2_install_packages.tar.xz nvidia@XXX.XXX.XXX.XXX:
+```
+
+On the Jetson node n°15, extract the package and remove the archive:
+
+```bash
+tar xf UTXJetson2_install_packages.tar.xz
+rm UTXJetson2_install_packages.tar.xz
+sudo mv UTXJetson2_install_packages /exports/
+```
+
+The installation data is now available to all the nodes.
 
 ### On the clients
 
