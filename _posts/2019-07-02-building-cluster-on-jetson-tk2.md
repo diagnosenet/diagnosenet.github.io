@@ -16,13 +16,13 @@ Every node runs an Ubuntu 16.04 operating system and has Internet access. They a
 
 ### The storage
 
-Each node owns 30GB of local storage, represented by the bock device `/dev/mmcblk0`.
+Each node owns 30GB of local storage, represented by the block device `/dev/mmcblk0`.
 
 In addition, nodes numbered 7, 15 and 23 each have access to one 1TB SATA SSD, through their block device `/dev/sda`. We will share these three SSD with the Network File System, to allow every node to use this storage.
 
 ### The management interface
 
-All nodes are connected by serial port to an out-of-band management (OOBM) interface, running an Ubuntu 14.04 operating system. Through this interface, it is possible to control all the nodes with the program `minicom`, as described in the next sections.
+All nodes are connected by serial port to an out-of-band management (OOBM) interface. Through it, it is possible to control all the nodes with the program `minicom`, as described in the next sections.
 
 The OOBM interface is controlled by an Ubuntu 14.04 operating system. Like the nodes, it is accessible by SSH and has Internet access.
 
@@ -70,7 +70,7 @@ The `nvidia` user has sudo rights.
 
 ## Set up the first Network File System
 
-The installation of CUDA and TensorFlow in the next section requires a large installation package (1.3 GB). To make the process efficient and avoid overloading the Internet link, we will set up NFS on the SSD owned by node 23, and copy the package on that filesystem, so that the other nodes can efficiently download it through the array's internal links.
+The installation of CUDA and TensorFlow in the next section requires a large installation package (1.3 GB). To make the process efficient and avoid overloading the Internet link, we will set up NFS on the SSD owned by node 15, and copy the package on that filesystem, so that the other nodes can efficiently download it through the array's internal links.
 
 ### On the server
 
@@ -110,12 +110,41 @@ Format the SSD:
 sudo mkfs.ext4 /dev/sda -L cluster_files
 ```
 
-Create the mountpoint and modify `fstab` to mount the SSD on it automatically, and mount it:
+Create the mountpoint and modify `fstab` to mount the SSD on it automatically, then mount it:
 
 ```bash
 sudo mkdir /exports
 echo '/dev/sda /exports ext4 defaults 0 2' | sudo tee -a /etc/fstab
 sudo mount /exports
+```
+
+Add the mountpoint to `/etc/exports` to make it accessible by the clients. In the next command, replace `XXX.XXX.XXX` with the 3 first segments of the nodes' IP addresses.
+
+```bash
+echo '/exports XXX.XXX.XXX.0/24(rw,fsid=0,insecure,no_subtree_check,async)' | sudo tee -a /etc/exports
+```
+
+Finally, restart the NFS server to apply the changes:
+
+```bash
+sudo systemctl restart nfs-kernel-server.service
+```
+
+### On the clients
+
+We need to run the following steps on all clients.
+
+Ensure that the NFS client software is installed:
+
+```bash
+sudo apt install nfs-common
+```
+
+Mount the NFS in a new directory (replace `XXX.XXX.XXX.XXX` with node n°15's IP address):
+
+```bash
+sudo mkdir -p /mnt/cluster_data/cluster0
+sudo mount -t nfs -o proto=tcp,port=2049 XXX.XXX.XXX.XXX:/exports /mnt/cluster_data/cluster0
 ```
 
 ## Install TensorFlow
