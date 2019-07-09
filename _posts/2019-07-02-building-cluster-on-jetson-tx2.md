@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Building Cluster on NVIDIA Jetson TK2"
+title: "Building Cluster on NVIDIA Jetson TX2"
 date: 2019-07-02
 ---
 
