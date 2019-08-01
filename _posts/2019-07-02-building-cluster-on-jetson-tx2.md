@@ -150,47 +150,32 @@ sudo mv UTXJetson2_install_packages /exports/
 
 The installation data is now available to all the nodes.
 
-### On the clients
+## Launch the installation
 
-We need to run the following steps on all clients.
-
-Ensure that the NFS client software is installed:
+The rest of the installation process is automated. Install the prerequisites on your local Linux machine:
 
 ```bash
-sudo apt install nfs-common
+sudo apt install sshpass git
 ```
 
-Mount the NFS in a new directory (replace `XXX.XXX.XXX.XXX` with node n°15's IP address):
-
-```bash
-sudo mkdir -p /mnt/cluster_data/cluster0
-sudo mount -t nfs -o proto=tcp,port=2049 XXX.XXX.XXX.XXX:/exports /mnt/cluster_data/cluster0
-```
-
-## Install TensorFlow and CUDA
-
-We need to install TensorFlow 1.3, CUDA 8.0 and CuDNN 6.0 on every node. TensorFlow must be compiled with support for:
-
-- GPU computing (Nvidia CUDA)
-- Message Passing Interface (MPI), we use the MVAPICH implementation
-- Hadoop File System (HDFS)
-
-Since these options are not standard, and MPI and HDFS are not supported by the `tensorflow-gpu` package in pip, we need to compile TensorFlow ourselves. This is done with the installation scripts on the project's git repository:
+Clone and launch the installation scripts:
 
 ```bash
 git clone https://github.com/IADBproject/buildEmbeddedClusters.git
+cd buildEmbeddedClusters/UTXJetson2/installWithoutCustomTF/
+bash global_scripts/installAllNodes.sh
 ```
 
-Run the installation script:
+The installation process will do the following steps on every node:
 
-```bash
-cd buildEmbeddedClusters/UTXJetson2/buildTensorFlow
-./installOneNode.sh
-```
-
-You may be asked immediately for the `nvidia` user's password. The rest of the installation should work unattended. This will probably take more than 10 minutes, since a large compilation step is required.
-
-*Note: this installation process will be automated in the future, with one script launching the installation on every nodes through the OOBM interface.*
+- create a new user, `mpiuser`
+- create an SSH key (if needed), then copy it on all the other nodes with `ssh-copy-id` (marking them as known hosts in the process)
+- if the node is an NFS master, set up an NFS filesystem and make it accessible to all the nodes
+- mount the three NFS filesystems in the `/home/mpiuser/cloud/{0,1,2}` directories
+- install Python 3.6, CUDA 8.0, cuDNN 6.0 and a CUDA-enabled TensorFlow 1.3 wheel, along with the other Diagnosenet prerequisites
+- change the hostname to `astroX`, where X is the node's number
+- add all the nodes in `/etc/hosts` as `astro0` to `astro23`
+- give special `sudo` permissions to `mpiuser`, to launch some commands related to Diagnosenet as root without entering a password
 
 At this point, CUDA and TensorFlow should be set up on the node and ready to run experiments.
 
