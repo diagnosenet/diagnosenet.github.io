@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
 
     <style type="text/css" media="all">
+
+      .wrapper-diagnosenet{
+        /*width: 500px;*/
+        max-width: 800px;
+        min-width: 500px;
+        margin: 0 auto;
+        }
 	    
      .navigation_list{
         list-style: none;
@@ -60,7 +67,8 @@
 	 	  
   </head>
 	<body>
-    	<div class="wrapper">
+    	<!--<div class="wrapper">-->
+    	<div class="wrapper-diagnosenet">
         <!-- HEADER -->
         	<header>
 		  <div class="navigation_list">
@@ -89,6 +97,7 @@
              {{ content }}
 
            </section>
+			
 
            <!-- FOOTER  -->
            <footer>
