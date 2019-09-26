@@ -4,16 +4,28 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link rel="stylesheet" href="{{ "/assets/css/style.css?v=" | append: site.github.build_revision | relative_url }}">
 
+    <style type="text/css" media="all">
+        .image_logo img {
+          background-color: white;
+          display: block;
+          align-items:center;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+    </style> 
+	 	  
   </head>
 	<body>
     	<div class="wrapper">
         <!-- HEADER -->
         	<header>
-			      <img src="/assets/img/logo.png" alt="DiagnoseNET" />
-			      <h2 id="project_tagline">{{ site.description | default: site.github.project_tagline }}</h2>
+			<li class="image_logo">
+				<img src="/assets/img/logo.png" alt="DiagnoseNET" />
+			</li>
+			<h2 id="project_tagline">{{ site.description | default: site.github.project_tagline }}</h2>
 
             <iframe src="https://ghbtns.com/github-btn.html?user=IADBproject&repo=diagnosenet&type=star&count=true&size=large"
                 frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
