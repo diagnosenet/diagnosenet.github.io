@@ -4,11 +4,19 @@ title: API Documentation
 ---
   <h1>{{ page.title }}</h1>
 	
-	<!-- <ul class="posts">
-  	<h2>Buildind A Jetson TK1 Cluster</h2> -->
+	<!-- <ul class="posts"> -->
+  	<h2>DiagnoseNET Modules</h2> 
 	
-  	<p>In this section you’ll find a tutorial to learn more to use a DiagnoseNET framework and a good practice guides for building,
-	  installing and evaluating a cluster of embedded computation platforms.
+  	<p>The first module is the deep learning model graph generator, which has two expression languages:
+		a $sequentialGraph$ API designed to automatize the hyperparameter search and
+		a $customGraph$ which support the TensorFlow expression codes for sophisticated neural networks. 
+		The second module is the data manager compose by three classes designed for splitting,
+		batching and multi-task any dataset over diverse computational architecture systems. 
+		The third is the platform execution module create to automatize the different parallel methods
+		for training the neural networks over the platforms.
+		The fourth module extends the enerGyPU monitor for workload characterization, constitute by
+		a data capture in runtime to collect the convergence tracking logs and the computing factor metrics;
+		and a dashboard for the experimental analysis results.
 	</p>
 	
 
